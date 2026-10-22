@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valorant Pro Rank HUD v6</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&family=Luckiest+Guy&display=swap');
+
+        /* 
+         * ==========================================
+         * TEMA MOTORU (CSS DEĞİŞKENLERİ)
+         * ==========================================
+         */
+        :root {
+            /* Varsayılan Şeffaf & Neon (Classic) */
+            --panel-bg: transparent;
+            --panel-blur: 0px;
+            --panel-radius: 0px;
+            --panel-border: none;
+            --panel-shadow: none;
+            
+            --accent-line: 3px solid var(--rank-accent);
+            --accent-glow: 0 0 15px var(--rank-accent), 0 0 5px var(--rank-accent);
+            --text-color: #ffffff;
+            --stats-bg: rgba(0, 0, 0, 0.45);
+            --stats-border: 1px solid rgba(255, 255, 255, 0.1);
+            --rank-gap: 10px;
+            --icon-text-gap: 10px;
+            --title-stats-gap: 6px;
+            --stats-progress-gap: 8px;
+            --stats-gap: 15px;
+            --daily-gap: 12px;
+            --title-stroke-width: 1.5px;
+            --title-stroke-color: #111318;
+            --title-glow: 0 0 5px rgba(255,70,85,.35);
+        }
+
+        /* 1. Buzlu Cam (Glass) */
+        body[data-theme="glass"] {
+            --panel-bg: rgba(15, 15, 20, 0.5);
+            --panel-blur: 12px;
+            --panel-radius: 16px;
+            --panel-border: 1px solid rgba(255, 255, 255, 0.15);
+            --panel-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            --accent-line: 3px solid rgba(255,255,255,0.2);
+            --accent-glow: none;
+            --stats-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 2. Siberpunk (Cyberpunk) */
+        body[data-theme="cyberpunk"] {
+            --panel-bg: rgba(10, 10, 10, 0.85);
+            --panel-radius: 0px;
+            --panel-border: 2px solid #fce205;
+            --panel-shadow: 4px 4px 0px #00f3ff, -4px -4px 0px #ff003c;
+            --accent-line: 4px solid #fce205;
+            --accent-glow: 0 0 10px #fce205;
+            --stats-bg: #000;
+            --stats-border: 1px solid #00f3ff;
+        }
+
+        /* 3. VCT Champions */
+        body[data-theme="champions"] {
+            --panel-bg: linear-gradient(135deg, rgba(20,0,0,0.9) 0%, rgba(10,10,10,0.95) 100%);
+            --panel-radius: 12px;
+            --panel-border: 1px solid #c79a3c;
+            --panel-shadow: 0 0 20px rgba(199, 154, 60, 0.3);
+            --accent-line: 3px solid #c79a3c;
+            --accent-glow: 0 0 15px #c79a3c;
+            --stats-bg: rgba(199, 154, 60, 0.1);
+            --stats-border: 1px solid rgba(199, 154, 60, 0.3);
+        }
+
+        /* 4. Viper (Zehir) */
+        body[data-theme="viper"] {
+            --panel-bg: linear-gradient(to right, rgba(9, 25, 12, 0.85), rgba(0,0,0,0.9));
+            --panel-radius: 8px;
+            --panel-border: 1px solid #137740;
+            --panel-shadow: 0 5px 25px rgba(19, 119, 64, 0.4);
+            --accent-line: 3px solid #20d571;
+            --accent-glow: 0 0 15px #20d571;
+            --stats-bg: rgba(32, 213, 113, 0.05);
+            --stats-border: 1px solid #137740;
+        }
+
+        /* 5. Reyna (Mor/Pembe) */
+        body[data-theme="reyna"] {
+            --panel-bg: rgba(15, 5, 20, 0.85);
+            --panel-radius: 20px;
+            --panel-border: 1px solid #9c27b0;
+            --panel-shadow: 0 0 30px rgba(156, 39, 176, 0.4);
+            --accent-line: 3px solid #e1bee7;
+            --accent-glow: 0 0 20px #9c27b0;
+            --stats-bg: rgba(156, 39, 176, 0.15);
+            --stats-border: 1px solid #ce93d8;
+        }
+
+        /* 6. Omen (Karanlık Gölgeler) */
+        body[data-theme="omen"] {
+            --panel-bg: rgba(5, 7, 15, 0.95);
+            --panel-blur: 5px;
+            --panel-radius: 4px;
+            --panel-border: 1px solid #2c3e50;
+            --panel-shadow: inset 0 0 20px rgba(44, 62, 80, 0.8), 0 0 15px rgba(0,0,0,0.9);
+            --accent-line: 3px solid #3498db;
+            --accent-glow: 0 0 15px rgba(52, 152, 219, 0.5);
+            --stats-bg: rgba(0,0,0,0.6);
+        }
+
+        /* 7. Koyu Kutu (Dark Box) */
+        body[data-theme="dark-box"] {
+            --panel-bg: #121212;
+            --panel-radius: 12px;
+            --panel-border: 1px solid #333;
+            --panel-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            --accent-line: 4px solid var(--rank-accent);
+            --accent-glow: none;
+            --stats-bg: #1e1e1e;
+        }
+
+        /* 8. Açık Kutu (Light Box) */
+        body[data-theme="light-box"] {
+            --panel-bg: #f8f9fa;
+            --panel-radius: 12px;
+            --panel-border: 1px solid #dee2e6;
+            --panel-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --text-color: #212529;
+            --accent-line: 4px solid var(--rank-accent);
+            --accent-glow: none;
+            --stats-bg: #ffffff;
+            --stats-border: 1px solid #dee2e6;
+        }
+
+        /* 9. Holografik */
+        body[data-theme="holographic"] {
+            --panel-bg: rgba(0, 20, 40, 0.4);
+            --panel-blur: 4px;
+            --panel-radius: 8px;
+            --panel-border: 1px solid rgba(0, 255, 255, 0.4);
+            --panel-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            --accent-line: 2px dashed #00ffff;
+            --accent-glow: 0 0 10px #00ffff;
+            --stats-bg: rgba(0, 255, 255, 0.05);
+            --stats-border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        /* 10. Outline (Sadece Çizgi) */
+        body[data-theme="outline"] {
+            --panel-bg: transparent;
+            --panel-radius: 16px;
+            --panel-border: 2px solid var(--rank-accent);
+            --accent-line: none;
+            --accent-glow: 0 0 10px var(--rank-accent);
+            --stats-bg: transparent;
+            --stats-border: 1px solid var(--rank-accent);
+        }
+
+        /* 11. Minimal */
+        body[data-theme="minimal"] {
+            --panel-bg: transparent;
+            --panel-border: none;
+            --accent-line: none;
+            --accent-glow: none;
+            --stats-bg: transparent;
+            --stats-border: none;
+        }
+
+        /* ========================================== */
+
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent !important;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color);
+            --rank-accent: #ffffff;
+        }
+
+        .frame {
+            position: relative;
+            display: inline-block;
+            margin: 40px;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            transition: transform 0.2s ease, filter 0.35s ease;
+            overflow: visible;
+        }
+        
+        .rank-box {
+            position: relative;
+            background: var(--panel-bg) !important;
+            backdrop-filter: blur(var(--panel-blur));
+            border: var(--panel-border);
+            border-radius: var(--panel-radius);
+            box-shadow: var(--panel-shadow);
+            width: auto;
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px 30px;
+            gap: var(--rank-gap);
+            transition: all 0.5s ease;
+        }
+
+        .rank-icon-wrapper {
+            position: relative;
+            filter: drop-shadow(0px 0px 18px var(--rank-accent));
+            transition: filter 0.5s ease;
+            z-index: 2;
+        }
+
+        .rank-box img#rank-image {
+            width: var(--rank-icon-size, 130px);
+            height: var(--rank-icon-size, 130px);
+            object-fit: contain;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.6));
+            transition: opacity 1s ease-in-out;
+            opacity: 1;
+            margin: 0;
+        }
+
+        .right-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 0;
+            border-left: var(--accent-line);
+            padding-left: var(--icon-text-gap);
+            position: relative;
+            z-index: 1;
+            transition: align-items 0.4s ease-in-out, border-color 0.5s ease;
+        }
+
+        /* NEON GLOW EFEKTİ */
+        .right-content::before {
+            content: "";
+            position: absolute;
+            left: -3px; top: 0; bottom: 0;
+            width: 3px;
+            background: transparent;
+            box-shadow: var(--accent-glow);
+            transition: box-shadow 0.5s ease;
+        }
+
+        #rank-name {
+            font-size: var(--rank-title-size, 44px);
+            font-weight: var(--custom-font-weight, 900);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1;
+            margin-bottom: var(--title-stats-gap);
+            -webkit-text-stroke: var(--title-stroke-width) var(--title-stroke-color);
+            paint-order: stroke fill;
+            text-shadow: var(--title-glow), var(--text-shadow-x) var(--text-shadow-y) var(--text-shadow-blur) var(--text-shadow-color);
+            white-space: nowrap;
+        }
+        body[data-theme="light-box"] #rank-name { text-shadow: none; }
+
+        .stats-container {
+            display: flex;
+            align-items: center;
+            gap: var(--stats-gap);
+            flex-wrap: nowrap;
+        }
+
+        .rank-box h1#rank-rating {
+            font-size: var(--rr-size, 42px);
+            font-weight: 800;
+            color: var(--rr-text-color, var(--rank-accent));
+            text-shadow: 0 0 15px var(--rank-accent), 0 2px 4px rgba(0,0,0,0.5);
+            margin: 0;
+            line-height: 1;
+            transition: color 0.5s ease-in-out;
+        }
+        body[data-theme="light-box"] h1#rank-rating { text-shadow: none; }
+
+        .shield-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 0;
+            margin-left: 0;
+            opacity: 1;
+            transition: opacity 300ms ease, height 400ms ease;
+            height: auto;
+            overflow: visible;
+        }
+
+        .shield-hidden { opacity: 0; height: 0; margin: 0; overflow: hidden; pointer-events: none; }
+        .daily-record {
+            display:flex; align-items:center; gap:var(--daily-gap); margin-top:var(--stats-progress-gap);
+            font-family:var(--custom-font, 'Montserrat', sans-serif); font-size:var(--daily-count-size,13px); font-weight:800;
+            letter-spacing:1.1px; line-height:1; white-space:nowrap; color:#fff;
+            text-shadow:0 1px 4px rgba(0,0,0,.8); -webkit-text-stroke:0;
+        }
+        .daily-label { color:rgba(255,255,255,.78); font-size:var(--daily-label-size,10px); letter-spacing:1.1px; }
+        .daily-win { color:#62f6a5; }
+        .daily-loss { color:#ff6676; }
+        .daily-win b,.daily-loss b { font-size:var(--daily-label-size,10px); margin-right:3px; }
+        .daily-status { display:none !important; font-size:9px; font-weight:600; letter-spacing:.5px; color:rgba(255,255,255,.45); }
+        .daily-record.is-loading .daily-status { color:#f2c66d; }
+        .daily-record.is-error .daily-status { color:#ff8994; }
+        .daily-record.is-empty .daily-status { color:rgba(255,255,255,.48); }
+        
+        #shield-image {
+            max-width: 30px;
+            height: auto;
+            margin: 0;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.6));
+            transition: opacity 250ms ease, transform 250ms ease;
+            will-change: opacity, transform;
+        }
+
+        #shield-count {
+            font-size: 28px;
+            font-weight: 700;
+            margin-left: 0;
+            position: static;
+            transform: none;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            transition: color 0.5s ease-in-out, opacity 250ms ease, transform 250ms ease;
+            opacity: 1;
+        }
+        body[data-theme="light-box"] #shield-count { text-shadow: none; }
+
+        .shield-icon-hidden #shield-count { transform: translateX(-8px); }
+        .fade-out { animation: fadeOut 1s forwards; }
+        .fade-in  { animation: fadeIn  1s forwards; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        .shield-fade-out { opacity: 0 !important; height: 0 !important; margin-top: 0 !important; }
+        .center-rr { align-items: flex-start !important; }
+
+        .rr-progress {
+            position:relative; isolation:isolate;
+            margin-top: var(--stats-progress-gap, 8px);
+            width: 100%; height: 12px;
+            background: linear-gradient(180deg, rgba(255,255,255,.17), rgba(20,20,24,.56));
+            border:1px solid rgba(255,255,255,.22); border-radius:999px;
+            overflow:hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.72), 0 0 0 1px rgba(0,0,0,.18);
+        }
+        .rr-progress::before { content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:2; background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); opacity:.75; }
+        .rr-progress-fill {
+            position:relative; height:100%; width:0%; overflow:hidden; border-radius:inherit;
+            background:linear-gradient(180deg, color-mix(in srgb, var(--rank-accent) 70%, white), var(--rank-accent) 48%, color-mix(in srgb, var(--rank-accent) 65%, black));
+            box-shadow:0 0 7px var(--rank-accent), 0 0 15px color-mix(in srgb, var(--rank-accent) 50%, transparent), inset 0 1px 1px rgba(255,255,255,.55);
+            transition:width .8s cubic-bezier(.16,1,.3,1), background .35s ease; will-change:width;
+        }
+        .rr-progress-fill::before { content:""; position:absolute; inset:0; background:repeating-linear-gradient(135deg,rgba(255,255,255,.16) 0 4px,transparent 4px 9px); opacity:.7; animation:bar-stripes 1.6s linear infinite; }
+        .rr-progress-fill::after { content:""; position:absolute; top:-70%; bottom:-70%; left:-38%; width:28%; transform:skewX(-22deg); background:linear-gradient(90deg,transparent,rgba(255,255,255,.85),transparent); filter:blur(.3px); animation:bar-shine 2.7s ease-in-out infinite; }
+        @keyframes bar-stripes { to { background-position: 18px 0; } }
+        @keyframes bar-shine { 0%,15% {left:-38%;opacity:0} 28% {opacity:.8} 65%,100% {left:120%;opacity:0} }
+        .rr-progress-fill.just-updated { animation:bar-hit .48s ease-out; }
+        @keyframes bar-hit { 0% {filter:brightness(1)} 35% {filter:brightness(1.8)} 100% {filter:brightness(1)} }
+        @media (prefers-reduced-motion: reduce) { .rr-progress-fill::before,.rr-progress-fill::after {animation:none} }
+
+        .progress-hidden { display: none; }
+
+        @media (max-width: 1200px) {
+            .rank-box img#rank-image { width: min(var(--rank-icon-size, 130px), 100px); height: min(var(--rank-icon-size, 130px), 100px); }
+            #rank-name { font-size: var(--rank-title-size, 44px); }
+            .rank-box h1#rank-rating { font-size: var(--rr-size, 42px); }
+            #shield-count { font-size: 24px; }
+            #shield-image { max-width: 26px; }
+            .rr-progress { height: 10px; }
+        }
+
+        /* 
+         * AYARLAR PANELİ (TÜRKÇELEŞTİRİLDİ & TEMİZLENDİ)
+         */
+        body.widget-has-error .frame { filter: blur(8px) brightness(0.5) saturate(0.7); }
+        .err-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; z-index: 10000; background: radial-gradient(120% 120% at 50% 38%, rgba(12,14,20,0.35), rgba(6,8,12,0.66)); backdrop-filter: blur(3px); }
+        .err-overlay.show { display: flex; }
+        .err-modal { width: min(90vw, 440px); box-sizing: border-box; text-align: center; color: #fff; background: linear-gradient(160deg, rgba(34,22,26,0.97), rgba(18,14,18,0.97)); border: 1px solid rgba(255,120,120,0.32); border-radius: 22px; padding: 30px 30px 26px; box-shadow: 0 26px 74px rgba(0,0,0,0.62); font-family: 'Montserrat', sans-serif; animation: eo-pop 0.28s ease-out; }
+        @keyframes eo-pop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+        .err-modal-icon { font-size: 46px; line-height: 1; }
+        .err-modal-code { display: inline-block; margin-top: 14px; font-size: 12.5px; font-weight: 700; color: #ffcaca; background: rgba(255,90,90,0.15); padding: 4px 13px; border-radius: 999px; }
+        .err-modal-title { font-size: 24px; font-weight: 700; margin-top: 14px; }
+        .err-modal-hint { font-size: 15px; line-height: 1.55; color: rgba(255,255,255,0.78); margin-top: 10px; }
+        .err-modal-btn { margin-top: 22px; border: 0; cursor: pointer; font-size: 15px; font-weight: 600; color: #fff; padding: 11px 24px; border-radius: 12px; background: #ff4655; box-shadow: 0 8px 22px rgba(255,70,85,0.42); }
+        
+        .setup-overlay { position: fixed; inset: 0; background: rgba(8, 10, 16, 0.08); backdrop-filter: none; display: none; align-items: flex-start; justify-content: flex-start; padding: 12px; z-index: 9999; pointer-events:none; }
+        .setup-card { pointer-events:auto; width: min(48vw, 600px); min-width: 420px; max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; background: linear-gradient(165deg, #1a1f2b 0%, #12151d 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 26px 28px; color: #eef1f6; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); animation: setup-pop 0.3s ease; }
+        .setup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .setup-title { font-size: 20px; font-weight: 700; }
+        .setup-title span { color: #ff4655; font-weight: 600; }
+        .setup-close { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .setup-close:hover { background: rgba(255, 90, 90, 0.16); color: #ffd0d0; }
+        .setup-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .setup-body .full { grid-column: 1 / -1; }
+        .setup-field { display: flex; flex-direction: column; gap: 7px; }
+        .setup-field label.field-label { font-size: 12.5px; font-weight: 600; color: #aab2c0; }
+        .setup-field input[type="text"], .setup-field input[type="password"], .setup-field select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 11px 13px; color: #fff; font-size: 14px; font-family: inherit; outline: none; }
+        .setup-field input:focus, .setup-field select:focus { border-color: #ff4655; box-shadow: 0 0 0 3px rgba(255, 70, 85, 0.25); background: rgba(255, 70, 85, 0.06); }
+        .setup-field select option { background: #12151d; color: #fff; }
+        
+        .setup-field input[type="range"] { -webkit-appearance: none; width: 100%; height: 20px; background: transparent; }
+        .setup-field input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.12); }
+        .setup-field input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -6px; border-radius: 50%; background: #fff; border: 3px solid #ff4655; }
+        
+        .setup-hint { font-size: 11.5px; color: #7d8593; margin-top: 1px; }
+        .setup-toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; padding: 5px 0; }
+        .setup-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .toggle-track { width: 44px; height: 26px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.12); position: relative; }
+        .toggle-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+        .setup-toggle input:checked + .toggle-track { background: #ff4655; border-color: transparent; }
+        .setup-toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+        .setup-toggle-label { font-size: 14px; color: #dfe3ea; }
+        
+        .setup-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; flex-wrap: wrap; }
+        .setup-reset { color: #8891a0; cursor: pointer; font-size: 12.5px; border-bottom: 1px dashed rgba(255, 255, 255, 0.22); }
+        .setup-actions { display: flex; gap: 10px; }
+        .btn { border: 0; border-radius: 12px; padding: 11px 18px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+        .btn-primary { background: #ff4655; color: #fff; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.07); color: #e6e9ef; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .setup-msg { margin-top: 4px; font-size: 13px; min-height: 1em; }
+        .setup-msg.error { color: #ff9b9b; }
+        .setup-msg.success { color: #8de8a3; }
+        
+        .secret-row { display: flex; gap: 8px; }
+        .secret-row input { flex: 1; }
+        .secret-btn { flex: 0 0 auto; width: 40px; cursor: pointer; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #cfd4dd; }
+        
+        /* Özel Dropdown (cdd) */
+        .cdd { position: relative; }
+        .cdd-native { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+        .cdd-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 11px 13px; color: #fff; cursor: pointer; }
+        .cdd.open .cdd-trigger { border-color: #ff4655; box-shadow: 0 0 0 3px rgba(255, 70, 85, 0.25); background: rgba(255, 70, 85, 0.06); }
+        .cdd-caret { width: 16px; height: 16px; transition: transform .2s ease; }
+        .cdd.open .cdd-caret { transform: rotate(180deg); }
+        .cdd-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30; background: #1c2130; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 6px; max-height: 260px; overflow-y: auto; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55); opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .16s ease, transform .16s ease; }
+        .cdd.open .cdd-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .cdd-option { padding: 9px 11px; border-radius: 8px; font-size: 14px; color: #dfe3ea; cursor: pointer; transition: background .12s ease; }
+        .cdd-option:hover { background: rgba(255, 70, 85, 0.18); }
+        .cdd-option.selected { background: rgba(255, 70, 85, 0.28); color: #fff; }
+
+        .gear { position: fixed; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(20, 22, 30, 0.55); color: #fff; z-index: 9998; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.3s ease; }
+        .gear:hover { background: rgba(255, 70, 85, 0.35); }
+        body:hover .gear { opacity: 1; pointer-events: auto; }
+        .dev-toggle { position: fixed; bottom: 12px; right: 12px; z-index: 9999; font-size: 12px; background: rgba(0, 0, 0, 0.7); padding: 8px 12px; border-radius: 10px; color: #fff; display: none; }
+
+        /* PRO TASARIM KATMANI: tipografi, metin plakası ve animasyonlar */
+        :root {
+            --custom-font: 'Montserrat', sans-serif;
+            --text-shadow-color: rgba(0,0,0,.8);
+            --text-shadow-blur: 10px;
+            --text-shadow-x: 0px;
+            --text-shadow-y: 4px;
+            --text-plate-color: rgba(0,0,0,.42);
+            --text-plate-blur: 0px;
+            --text-plate-radius: 8px;
+            --text-plate-padding-y: 7px;
+            --text-plate-padding-x: 10px;
+            --motion-duration: 650ms;
+            --custom-font-weight: 800;
+            --rank-title-size: 44px; --rr-size: 42px; --daily-label-size: 10px; --daily-count-size: 13px; --rr-text-color: var(--rank-accent);
+        }
+        body, .setup-card, .err-modal { font-family: var(--custom-font); }
+        #rank-name, #rank-rating, #shield-count { font-family: var(--custom-font); }
+        #rank-rating, #shield-count { text-shadow: var(--text-shadow-x) var(--text-shadow-y) var(--text-shadow-blur) var(--text-shadow-color); }
+        #rank-name {
+            display: inline-block;
+            padding: var(--text-plate-padding-y) var(--text-plate-padding-x);
+            margin-left: calc(-1 * var(--text-plate-padding-x));
+            border-radius: var(--text-plate-radius);
+            background: var(--text-plate-color);
+            backdrop-filter: blur(var(--text-plate-blur));
+            -webkit-backdrop-filter: blur(var(--text-plate-blur));
+            transition: background .2s ease, text-shadow .2s ease, color .2s ease;
+        }
+        .rank-box.motion-fade { animation: proFade var(--motion-duration) both; }
+        .rank-box.motion-slide { animation: proSlide var(--motion-duration) cubic-bezier(.2,.8,.2,1) both; }
+        .rank-box.motion-pop { animation: proPop var(--motion-duration) cubic-bezier(.2,.9,.25,1.25) both; }
+        .rank-box.motion-rise { animation: proRise var(--motion-duration) cubic-bezier(.2,.8,.2,1) both; }
+        .rank-box.motion-glow { animation: proGlow 2.4s ease-in-out infinite alternate; }
+        .rank-box.motion-sweep .right-content { position:relative; overflow:hidden; }
+        .rank-box.motion-sweep .right-content::after {
+            content:""; position:absolute; inset:-30% auto -30% -55%; width:35%;
+            transform:skewX(-18deg); pointer-events:none;
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+            animation: proSweep 3.5s ease-in-out infinite;
+        }
+        @keyframes proFade { from {opacity:0} to {opacity:1} }
+        @keyframes proSlide { from {opacity:0; transform:translateX(-22px)} to {opacity:1; transform:translateX(0)} }
+        @keyframes proPop { from {opacity:0; transform:scale(.88)} to {opacity:1; transform:scale(1)} }
+        @keyframes proRise { from {opacity:0; transform:translateY(16px)} to {opacity:1; transform:translateY(0)} }
+        @keyframes proGlow { from {filter:drop-shadow(0 0 0 transparent)} to {filter:drop-shadow(0 0 10px var(--rank-accent))} }
+        @keyframes proSweep { 0%,20% {left:-55%} 65%,100% {left:130%} }
+        .setup-section-title {
+            grid-column:1/-1; font-size:12px; letter-spacing:1.2px; text-transform:uppercase;
+            color:#ff6976; font-weight:800; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,.1);
+            margin-top:5px;
+        }
+        .setup-field input[type="color"] {
+            width:100%; height:40px; padding:4px; border-radius:10px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12);
+        }
+        .setup-field input[type="number"] {
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1);
+            border-radius:12px; padding:11px 13px; color:#fff; font:inherit; width:100%; box-sizing:border-box;
+        }
+        @media (max-width: 700px) { .setup-overlay { padding:6px; } .setup-card { width:calc(100vw - 12px); min-width:0; max-height:58vh; padding:18px; } }
+        @media (prefers-reduced-motion: reduce) {
+            .rank-box.motion-glow, .rank-box.motion-sweep .right-content::after { animation:none !important; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="frame">
+        <div class="rank-box">
+            <!-- İkon Alanı -->
+            <div class="rank-icon-wrapper">
+                <img id="rank-image" src="" alt="">
+            </div>
+            
+            <div class="right-content">
+                <!-- Rank Adı -->
+                <div id="rank-name">YÜKLENİYOR...</div>
+                
+                <div class="stats-container">
+                    <h1 id="rank-rating">...</h1>
+                    <div class="shield-container shield-hidden">
+                        <img id="shield-image" src="" alt="">
+                        <span id="shield-count">- KALKAN</span>
+                    </div>
+                </div>
+                <div id="daily-record" class="daily-record" aria-label="Win ve Loose maç sayısı">
+                    <span class="daily-win"><b>WIN</b> <strong id="daily-wins">–</strong></span>
+                    <span class="daily-loss"><b>LOSE</b> <strong id="daily-losses">–</strong></span>
+                    <span id="daily-status" class="daily-status">MAÇ VERİSİ BEKLENİYOR</span>
+                </div>
+
+                <div class="rr-progress progress-hidden" id="rr-progress" title="Sonraki kademeye KP">
+                    <div class="rr-progress-fill" id="rr-progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ayarlar İkonu -->
+    <div class="gear" id="open-setup" title="Ayarları Aç">⚙️</div>
+
+    <div class="dev-toggle" id="dev-toggle">
+        <label><input type="checkbox" id="use-mock-data"> Sahte Veri Kullan (Dev)</label>
+    </div>
+
+    <!-- Hata Ekranı -->
+    <div class="err-overlay" id="error-overlay" aria-hidden="true">
+        <div class="err-modal">
+            <div class="err-modal-icon" id="eo-icon">⚠️</div>
+            <div class="err-modal-code" id="eo-code">E-UNKNOWN</div>
+            <div class="err-modal-title" id="eo-title">Bir şeyler yanlış gitti</div>
+            <div class="err-modal-hint" id="eo-hint"></div>
+            <button class="err-modal-btn" id="eo-open-setup">Ayarları Aç</button>
+        </div>
+    </div>
+
+    <!-- Ayarlar Paneli (Türkçe ve Temiz) -->
+    <div class="setup-overlay" id="setup-overlay" aria-hidden="true">
+        <div class="setup-card">
+            <div class="setup-header">
+                <div class="setup-title">Widget Ayarları <span>· Pro Sürüm</span></div>
+                <div class="setup-close" id="close-setup" title="Kapat">✕</div>
+            </div>
+            <div class="setup-body">
+                <div class="setup-field full">
+                    <label class="field-label" for="apiKey">Henrik API Anahtarı</label>
+                    <div class="secret-row">
+                        <input id="apiKey" type="password" placeholder="API Anahtarınızı girin" autocomplete="off" spellcheck="false">
+                        <button type="button" class="secret-btn" id="apiKey-paste" title="Panodan yapıştır">📋</button>
+                        <button type="button" class="secret-btn" id="apiKey-reveal" title="Göster / Gizle">👁</button>
+                    </div>
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="username">Riot Adı (Kare'den önce)</label>
+                    <input id="username" type="text" placeholder="Örn: JstDave">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="tag">Riot Etiketi (Kare'den sonra)</label>
+                    <input id="tag" type="text" placeholder="Örn: JST">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="region">Bölge</label>
+                    <select id="region">
+                        <option value="">Bölge Seçin</option>
+                        <option value="eu">EU (Avrupa / TR)</option>
+                        <option value="na">NA (Kuzey Amerika)</option>
+                        <option value="ap">AP (Asya Pasifik)</option>
+                        <option value="br">BR (Brezilya)</option>
+                        <option value="kr">KR (Kore)</option>
+                        <option value="latam">LATAM</option>
+                    </select>
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="platform">Platform</label>
+                    <select id="platform">
+                        <option value="">Platform Seçin</option>
+                        <option value="pc">PC</option>
+                        <option value="console">Konsol</option>
+                    </select>
+                </div>
+                
+                <!-- YENİ TEMALAR BURADA -->
+                <div class="setup-field full">
+                    <label class="field-label" for="theme">Görsel Tema</label>
+                    <select id="theme">
+                        <option value="classic">Şeffaf Neon (Varsayılan)</option>
+                        <option value="glass">Buzlu Cam (Glass)</option>
+                        <option value="cyberpunk">Siberpunk (Sarı/Siyah)</option>
+                        <option value="champions">VCT Champions (Altın/Kırmızı)</option>
+                        <option value="viper">Viper (Zehir Yeşili)</option>
+                        <option value="reyna">Reyna (Pembe/Mor)</option>
+                        <option value="omen">Omen (Karanlık/Mavi)</option>
+                        <option value="dark-box">Koyu Kutu (Dark Box)</option>
+                        <option value="light-box">Açık Kutu (Light Box)</option>
+                        <option value="holographic">Holografik (Camgöbeği)</option>
+                        <option value="outline">Sadece Dış Çizgiler</option>
+                        <option value="minimal">Minimal (Arka plan yok)</option>
+                    </select>
+                </div>
+                
+                <div class="setup-section-title">Metin ve Tipografi</div>
+                <div class="setup-field full">
+                    <label class="field-label" for="customRankText">Özel rütbe metni (boş bırakılırsa otomatik)</label>
+                    <input id="customRankText" type="text" maxlength="36" placeholder="Örn: IMMORTAL YOLCUSU">
+                    <div class="setup-hint">Bu alan yalnızca başlığı değiştirir; rütbe verisi ve KP sayısı güncel kalır.</div>
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="customFont">Yazı tipi</label>
+                    <select id="customFont">
+                        <option value="'Montserrat', sans-serif|900">Montserrat Black</option>
+                        <option value="'Montserrat', sans-serif|700">Montserrat Bold</option>
+                        <option value="'Poppins', sans-serif|400">Poppins Regular</option>
+                        <option value="'Poppins', sans-serif|600">Poppins SemiBold</option>
+                        <option value="'Poppins', sans-serif|700">Poppins Bold</option>
+                        <option value="'Poppins', sans-serif|800">Poppins ExtraBold</option>
+                        <option value="'Poppins', sans-serif|900">Poppins Black</option>
+                        <option value="'Luckiest Guy', cursive|400">Luckiest Guy</option>
+                        <option value="Impact, sans-serif|900">Impact · Kalın</option>
+                        <option value="'Trebuchet MS', sans-serif|700">Trebuchet · Sportif</option>
+                        <option value="Arial, sans-serif|700">Arial Bold</option>
+                        <option value="Georgia, serif|700">Georgia Bold</option>
+                        <option value="'Courier New', monospace|700">Courier Bold · Teknik</option>
+                        <option value="system-ui, sans-serif|800">Sistem · ExtraBold</option>
+                    </select>
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="customTextColor">Başlık rengi</label>
+                    <input id="customTextColor" type="color" value="#ffffff">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="rankTitleSize">Başlık boyutu <span id="rankTitleSizeLabel">44 px</span></label>
+                    <input id="rankTitleSize" type="range" min="12" max="72" value="44" oninput="onDesignRange('rankTitleSize', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="rrSize">KP boyutu <span id="rrSizeLabel">42 px</span></label>
+                    <input id="rrSize" type="range" min="12" max="72" value="42" oninput="onDesignRange('rrSize', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="rrColor">KP rengi</label>
+                    <input id="rrColor" type="color" value="#ffffff">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="dailyLabelSize">WIN / LOOSE etiket boyutu <span id="dailyLabelSizeLabel">10 px</span></label>
+                    <input id="dailyLabelSize" type="range" min="7" max="24" value="10" oninput="onDesignRange('dailyLabelSize', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="dailyCountSize">WIN / LOOSE sayı boyutu <span id="dailyCountSizeLabel">13 px</span></label>
+                    <input id="dailyCountSize" type="range" min="8" max="36" value="13" oninput="onDesignRange('dailyCountSize', this.value)">
+                </div>
+                <div class="setup-field full">
+                    <label class="field-label" for="textShadowColor">Metin gölgesi rengi</label>
+                    <input id="textShadowColor" type="color" value="#000000">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textShadowOpacity">Gölge yoğunluğu <span id="textShadowOpacityLabel">80%</span></label>
+                    <input id="textShadowOpacity" type="range" min="0" max="100" value="80" oninput="onDesignRange('textShadowOpacity', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textShadowBlur">Gölge bulanıklığı <span id="textShadowBlurLabel">10 px</span></label>
+                    <input id="textShadowBlur" type="range" min="0" max="32" value="10" oninput="onDesignRange('textShadowBlur', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textShadowX">Gölge yatay konum <span id="textShadowXLabel">0 px</span></label>
+                    <input id="textShadowX" type="range" min="-12" max="12" value="0" oninput="onDesignRange('textShadowX', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textShadowY">Gölge dikey konum <span id="textShadowYLabel">4 px</span></label>
+                    <input id="textShadowY" type="range" min="-12" max="18" value="4" oninput="onDesignRange('textShadowY', this.value)">
+                </div>
+                <div class="setup-section-title">Stroke / Kontur ve Işık</div>
+                <div class="setup-field">
+                    <label class="field-label" for="strokeColor">Kontur rengi</label>
+                    <input id="strokeColor" type="color" value="#111318">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="strokeWidth">Kontur kalınlığı <span id="strokeWidthLabel">1.5 px</span></label>
+                    <input id="strokeWidth" type="range" min="0" max="5" step="0.25" value="1.5" oninput="onDesignRange('strokeWidth', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="glowColor">Glow rengi</label>
+                    <input id="glowColor" type="color" value="#ff4655">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="glowStrength">Glow yoğunluğu <span id="glowStrengthLabel">35%</span></label>
+                    <input id="glowStrength" type="range" min="0" max="100" value="35" oninput="onDesignRange('glowStrength', this.value)">
+                </div>
+
+                <div class="setup-section-title">Yerleşim / Eleman Aralıkları</div>
+                <div class="setup-field">
+                    <label class="field-label" for="rankGap">İkon ile içerik arası <span id="rankGapLabel">10 px</span></label>
+                    <input id="rankGap" type="range" min="0" max="80" value="10" oninput="onDesignRange('rankGap', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="iconTextGap">Çizgi ile metin arası <span id="iconTextGapLabel">10 px</span></label>
+                    <input id="iconTextGap" type="range" min="0" max="60" value="10" oninput="onDesignRange('iconTextGap', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="titleStatsGap">Başlık ile KP satırı <span id="titleStatsGapLabel">6 px</span></label>
+                    <input id="titleStatsGap" type="range" min="0" max="40" value="6" oninput="onDesignRange('titleStatsGap', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="statsProgressGap">KP / günlük kayıt / bar arası <span id="statsProgressGapLabel">8 px</span></label>
+                    <input id="statsProgressGap" type="range" min="0" max="40" value="8" oninput="onDesignRange('statsProgressGap', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="statsGap">KP ile kalkan arası <span id="statsGapLabel">15 px</span></label>
+                    <input id="statsGap" type="range" min="0" max="50" value="15" oninput="onDesignRange('statsGap', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="dailyGap">Günlük W/L eleman arası <span id="dailyGapLabel">12 px</span></label>
+                    <input id="dailyGap" type="range" min="0" max="40" value="12" oninput="onDesignRange('dailyGap', this.value)">
+                </div>
+                <div class="setup-field full">
+                    <label class="setup-toggle"><input id="showDailyRecord" type="checkbox" checked><span class="toggle-track"></span><span class="setup-toggle-label">Bugünün galibiyet / mağlubiyet sayısını göster (otomatik)</span></label>
+                    <div class="setup-hint">Rekabetçi maç geçmişi API üzerinden kontrol edilir. API maç verisi sağlamazsa sayaç güncellenmeyebilir.</div>
+                </div>
+                <div class="setup-field full">
+                    <button type="button" class="btn btn-secondary" id="reset-daily-record">WIN / LOOSE Sayaçlarını Sıfırla</button>
+                    <div class="setup-hint">Sıfırlama anından sonra oynanan rekabetçi maçlar sayılır. Sayaç yerel olarak saklanır.</div>
+                </div>
+
+                <div class="setup-section-title">Metin Arkası / Okunabilirlik</div>
+                <div class="setup-field">
+                    <label class="field-label" for="textPlateColor">Metin arkası rengi</label>
+                    <input id="textPlateColor" type="color" value="#000000">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textPlateOpacity">Arka plan opaklığı <span id="textPlateOpacityLabel">42%</span></label>
+                    <input id="textPlateOpacity" type="range" min="0" max="100" value="42" oninput="onDesignRange('textPlateOpacity', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textPlateBlur">Arka plan bulanıklığı <span id="textPlateBlurLabel">0 px</span></label>
+                    <input id="textPlateBlur" type="range" min="0" max="20" value="0" oninput="onDesignRange('textPlateBlur', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textPlateRadius">Köşe yuvarlaklığı <span id="textPlateRadiusLabel">8 px</span></label>
+                    <input id="textPlateRadius" type="range" min="0" max="24" value="8" oninput="onDesignRange('textPlateRadius', this.value)">
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="textPlatePadding">İç boşluk <span id="textPlatePaddingLabel">10 px</span></label>
+                    <input id="textPlatePadding" type="range" min="0" max="20" value="10" oninput="onDesignRange('textPlatePadding', this.value)">
+                </div>
+
+                <div class="setup-section-title">Hareket Tasarımı</div>
+                <div class="setup-field">
+                    <label class="field-label" for="motion">Animasyon stili</label>
+                    <select id="motion">
+                        <option value="none">Kapalı</option>
+                        <option value="fade">Yumuşak giriş</option>
+                        <option value="slide">Yandan kayma</option>
+                        <option value="pop">Dinamik pop</option>
+                        <option value="rise">Yukarı yükselme</option>
+                        <option value="glow">Nabız ışığı</option>
+                        <option value="sweep">Işık taraması</option>
+                    </select>
+                </div>
+                <div class="setup-field">
+                    <label class="field-label" for="motionDuration">Giriş süresi <span id="motionDurationLabel">650 ms</span></label>
+                    <input id="motionDuration" type="range" min="200" max="1600" step="50" value="650" oninput="onDesignRange('motionDuration', this.value)">
+                </div>
+
+                <div class="setup-field full">
+                    <label class="field-label">Ekstra Görünümler</label>
+                    <label class="setup-toggle" id="toggle-progress">
+                        <input id="showProgress" type="checkbox">
+                        <span class="toggle-track"></span>
+                        <span class="setup-toggle-label">KP (İlerleme) Barını Göster</span>
+                    </label>
+                </div>
+                <div class="setup-field full">
+                    <label class="field-label" for="rankIconSize">Rütbe ikonu boyutu <span id="rankIconSizeLabel">130 px</span></label>
+                    <input id="rankIconSize" type="range" min="40" max="220" step="5" value="130" oninput="onDesignRange('rankIconSize', this.value)">
+                    <div class="setup-hint">Yalnızca rütbe simgesinin boyutunu değiştirir.</div>
+                </div>
+                <div class="setup-field full">
+                    <label class="field-label" for="scale">Widget Boyutu <span id="scale-label" style="color:#ff4655;font-weight:700;">100%</span></label>
+                    <input id="scale" type="range" min="30" max="150" step="5" value="100" oninput="onScaleInput(this.value)">
+                </div>
+                <div class="setup-field full">
+                    <div id="setup-message" class="setup-msg"></div>
+                </div>
+            </div>
+            <div class="setup-footer">
+                <div class="setup-reset" id="reset-setup">Ayarları Sıfırla</div>
+                <div class="setup-actions">
+                    <button class="btn btn-secondary" id="copy-url">OBS / TikTok URL'sini Kopyala</button>
+                    <button class="btn btn-primary" id="save-setup">Kaydet & Uygula</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // AYARLAR & DEĞİŞKENLER
+        // ==========================================
+        let API_KEY    = "YOUR_API_KEY";
+        let USERNAME   = "YOUR_USERNAME";
+        let TAG        = "YOUR_TAG";
+        let REGION     = "YOUR_REGION";
+        let PLATFORM   = "YOUR_PLATFORM";
+        let THEME      = "classic";
+        let SHOW_PROGRESS = true;
+        let SCALE = 100;
+        const DESIGN_DEFAULTS = {
+            customRankText: "", rankIconSize: 130, customFont: "'Poppins', sans-serif|800", customTextColor: "#ffffff", rankTitleSize:44, rrSize:42, rrColor:'#ffffff', dailyLabelSize:10, dailyCountSize:13,
+            textShadowColor: "#000000", textShadowOpacity: 80, textShadowBlur: 10, textShadowX: 0, textShadowY: 4,
+            textPlateColor: "#000000", textPlateOpacity: 0, textPlateBlur: 0, textPlateRadius: 8, textPlatePadding: 0,
+            strokeColor: "#111318", strokeWidth: 1.5, glowColor: "#ff4655", glowStrength: 35,
+            rankGap: 10, iconTextGap: 10, titleStatsGap: 6, statsProgressGap: 8, statsGap: 15, dailyGap: 12,
+            showDailyRecord: true, motion: "slide", motionDuration: 450
+        };
+        let DESIGN = { ...DESIGN_DEFAULTS };
+
+        let previousRankRating = null;
+        let previousRankTier = null;
+        let previousLeaderboardRank = null;
+        let previousHadLeaderboard = null;
+        let previousShieldCount = null;
+        let hadSuccessfulLoad = false;
+        let suppressShieldUpdates = false;
+        let shieldSettleTimer = null;
+
+        const UNRATED_ICON = 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png';
+        const LS_KEY = "valorant_widget_settings_v3";
+        const DAILY_RESET_KEY = 'valorant_widget_daily_reset_v1';
+
+        const WIDGET_ERRORS = {
+            'E-CONFIG': { title: 'Kurulum Eksik', hint: 'Ayarlar (dişli) simgesine tıklayın ve tüm alanları doldurun.' },
+            'E-KEY':    { title: 'API Reddedildi', hint: 'Henrik API anahtarınız yanlış veya süresi dolmuş.' },
+            'E-PLAYER': { title: 'Hesap Bulunamadı', hint: 'Kullanıcı adı, etiket ve bölgenin doğruluğunu kontrol edin.' },
+            'E-RATE':   { title: 'Limit Aşıldı', hint: 'Çok fazla istek atıldı. Widget otomatik tekrar deneyecek.' },
+            'E-API':    { title: 'API Çöktü', hint: 'HenrikDev tarafında sorun var. Bir süre sonra tekrar deneyin.' },
+            'E-NET':    { title: 'Bağlantı Yok', hint: 'İnternet bağlantınızı kontrol edin.' },
+            'E-NODATA': { title: 'Veri Yok', hint: 'Hesabın henüz rankı yok veya bölge/platform yanlış.' },
+        };
+
+        // Rank Çeviri
+        function translateRankName(tierName) {
+            if (!tierName) return 'YÜKLENİYOR...';
+            const map = { 'Iron': 'DEMİR', 'Bronze': 'BRONZ', 'Silver': 'GÜMÜŞ', 'Gold': 'ALTIN', 'Platinum': 'PLAT', 'Diamond': 'ELMAS', 'Ascendant': 'YÜCELİK', 'Immortal': 'ÖLÜMSÜZLÜK', 'Radiant': 'RADYANT', 'Unrated': 'DERECESİZ' };
+            const parts = tierName.split(' ');
+            const trBase = map[parts[0]] || parts[0];
+            return parts.length > 1 ? trBase + ' ' + parts[1] : trBase;
+        }
+
+        function updateRankNameUI(tierName) {
+            const el = document.getElementById('rank-name');
+            if(el) el.textContent = (DESIGN.customRankText || "").trim() || translateRankName(tierName);
+        }
+
+        function withShieldSuppressed(durationMs, afterUnlock) {
+            suppressShieldUpdates = true;
+            if (shieldSettleTimer) clearTimeout(shieldSettleTimer);
+            shieldSettleTimer = setTimeout(() => {
+                suppressShieldUpdates = false;
+                if (typeof afterUnlock === 'function') afterUnlock();
+            }, durationMs);
+        }
+
+        function showErrorOverlay(code) {
+            const info = WIDGET_ERRORS[code] || { title: 'Bilinmeyen Hata', hint: 'Geliştirici konsolunu (F12) kontrol edin.' };
+            document.getElementById('eo-code').textContent = code;
+            document.getElementById('eo-title').textContent = info.title;
+            document.getElementById('eo-hint').textContent = info.hint;
+            document.getElementById('error-overlay').classList.add('show');
+            document.body.classList.add('widget-has-error');
+        }
+
+        function hideErrorOverlay() {
+            document.getElementById('error-overlay').classList.remove('show');
+            document.body.classList.remove('widget-has-error');
+        }
+
+        function showWidgetError(code) {
+            console.warn('[ValRank] HATA:', code);
+            if (code === 'E-CONFIG' || code === 'E-KEY' || code === 'E-PLAYER') {
+                if (!hadSuccessfulLoad) renderPlaceholderState();
+                showErrorOverlay(code); 
+                return; 
+            }
+            hideErrorOverlay();
+            if (!hadSuccessfulLoad) renderPlaceholderState();
+        }
+
+        function clearWidgetError() { hideErrorOverlay(); }
+
+        function mapHttpStatusToError(status) {
+            if (status === 401 || status === 403) return 'E-KEY';
+            if (status === 404) return 'E-PLAYER';
+            if (status === 429) return 'E-RATE';
+            if (status >= 500) return 'E-API';
+            return 'E-NET';
+        }
+
+        const RANK_ACCENTS = { Iron: '#9aa0a6', Bronze: '#c08a5a', Silver: '#cfd6dd', Gold: '#e8c65a', Platinum: '#4fd8c6', Diamond: '#b48cff', Ascendant: '#3fbf7f', Immortal: '#e35a6f', Radiant: '#fff3b0', Unrated: '#8a8f98' };
+        function setRankAccent(tierName) {
+            const base = String(tierName || '').split(' ')[0];
+            document.body.style.setProperty('--rank-accent', RANK_ACCENTS[base] || '#ffffff');
+        }
+
+        function updateProgressBar(rr, tierName) {
+            const bar = document.getElementById('rr-progress');
+            const fill = document.getElementById('rr-progress-fill');
+            if (!bar || !fill) return;
+            const openEnded = String(tierName || '').startsWith('Immortal') || tierName === 'Radiant' || tierName === 'Unrated';
+            if (!SHOW_PROGRESS || openEnded || !hadSuccessfulLoad || !tierName) {
+                bar.classList.add('progress-hidden');
+                return;
+            }
+            bar.classList.remove('progress-hidden');
+            const pct = Math.max(0, Math.min(100, rr));
+            fill.style.width = pct + '%';
+            fill.classList.remove('just-updated'); void fill.offsetWidth; fill.classList.add('just-updated');
+            bar.title = pct + ' / 100 KP';
+        }
+
+        function getQueryParams() {
+            const sp = new URLSearchParams(window.location.search);
+            const obj = {};
+            for (const [k, v] of sp.entries()) obj[k.toLowerCase()] = v;
+            return obj;
+        }
+
+        function normalizeRegion(v) {
+            const m = (v || '').toLowerCase();
+            return { na:"na", eu:"eu", latam:"latam", br:"br", ap:"ap", kr:"kr" }[m] || "";
+        }
+
+        function normalizePlatform(v) {
+            const m = (v || '').toLowerCase();
+            return (m === "pc" || m === "console") ? m : "";
+        }
+
+        function loadFromLocalStorage() {
+            try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch { return null; }
+        }
+        function saveToLocalStorage(settings) { localStorage.setItem(LS_KEY, JSON.stringify(settings)); }
+
+        function hexToRgb(hex) {
+            const h = String(hex || "#000000").replace("#", "");
+            const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+            return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        }
+        function applyDesign(design = {}) {
+            DESIGN = { ...DESIGN_DEFAULTS, ...DESIGN, ...design };
+            const root = document.documentElement.style;
+            const shadow = hexToRgb(DESIGN.textShadowColor);
+            const plate = hexToRgb(DESIGN.textPlateColor);
+            const fontChoice = String(DESIGN.customFont || "'Poppins', sans-serif|800").split('|');
+            root.setProperty("--custom-font", fontChoice[0]);
+            root.setProperty("--custom-font-weight", fontChoice[1] || '800');
+            root.setProperty("--rank-icon-size", `${Math.max(40, Math.min(220, Number(DESIGN.rankIconSize ?? 130)))}px`);
+            root.setProperty("--rank-title-size", `${Number(DESIGN.rankTitleSize ?? 44)}px`);
+            root.setProperty("--rr-size", `${Number(DESIGN.rrSize ?? 42)}px`);
+            root.setProperty("--rr-text-color", DESIGN.rrColor || 'var(--rank-accent)');
+            root.setProperty("--daily-label-size", `${Number(DESIGN.dailyLabelSize ?? 10)}px`);
+            root.setProperty("--daily-count-size", `${Number(DESIGN.dailyCountSize ?? 13)}px`);
+            root.setProperty("--text-shadow-color", `rgba(${shadow.r},${shadow.g},${shadow.b},${Number(DESIGN.textShadowOpacity)/100})`);
+            root.setProperty("--text-shadow-blur", `${Number(DESIGN.textShadowBlur)}px`);
+            root.setProperty("--text-shadow-x", `${Number(DESIGN.textShadowX)}px`);
+            root.setProperty("--text-shadow-y", `${Number(DESIGN.textShadowY)}px`);
+            root.setProperty("--text-plate-color", `rgba(${plate.r},${plate.g},${plate.b},${Number(DESIGN.textPlateOpacity)/100})`);
+            root.setProperty("--text-plate-blur", `${Number(DESIGN.textPlateBlur)}px`);
+            root.setProperty("--text-plate-radius", `${Number(DESIGN.textPlateRadius)}px`);
+            root.setProperty("--text-plate-padding-x", `${Number(DESIGN.textPlatePadding)}px`);
+            root.setProperty("--text-plate-padding-y", `${Math.max(0, Math.round(Number(DESIGN.textPlatePadding)*.7))}px`);
+            root.setProperty("--motion-duration", `${Number(DESIGN.motionDuration)}ms`);
+            root.setProperty("--title-stroke-width", `${Number(DESIGN.strokeWidth)}px`);
+            root.setProperty("--title-stroke-color", DESIGN.strokeColor || "#111318");
+            const glow = hexToRgb(DESIGN.glowColor || "#ff4655");
+            root.setProperty("--title-glow", `0 0 ${Math.round(Number(DESIGN.glowStrength) * 0.16)}px rgba(${glow.r},${glow.g},${glow.b},${Number(DESIGN.glowStrength)/100})`);
+            root.setProperty("--rank-gap", `${Number(DESIGN.rankGap)}px`);
+            root.setProperty("--icon-text-gap", `${Number(DESIGN.iconTextGap)}px`);
+            root.setProperty("--title-stats-gap", `${Number(DESIGN.titleStatsGap)}px`);
+            root.setProperty("--stats-progress-gap", `${Number(DESIGN.statsProgressGap)}px`);
+            root.setProperty("--stats-gap", `${Number(DESIGN.statsGap)}px`);
+            root.setProperty("--daily-gap", `${Number(DESIGN.dailyGap)}px`);
+            const daily = document.getElementById("daily-record");
+            if (daily) daily.style.display = DESIGN.showDailyRecord === false || DESIGN.showDailyRecord === "false" ? "none" : "flex";
+            const title = document.getElementById("rank-name");
+            if (title) {
+                title.style.color = DESIGN.customTextColor || "";
+                const currentTier = document.getElementById("rank-rating")?.dataset?.tierName || previousRankTier || "Unrated";
+                title.textContent = (DESIGN.customRankText || "").trim() || translateRankName(currentTier);
+            }
+            const box = document.querySelector(".rank-box");
+            if (box) {
+                box.classList.remove("motion-fade","motion-slide","motion-pop","motion-rise","motion-glow","motion-sweep");
+                if (DESIGN.motion && DESIGN.motion !== "none") {
+                    box.classList.remove("motion-" + DESIGN.motion);
+                    void box.offsetWidth;
+                    box.classList.add("motion-" + DESIGN.motion);
+                }
+            }
+        }
+        function persistLiveDesign() {
+            try {
+                const previous = loadFromLocalStorage() || {};
+                saveToLocalStorage({ ...previous, ...DESIGN, theme: document.getElementById('theme')?.value || THEME,
+                    progress: document.getElementById('showProgress')?.checked ?? SHOW_PROGRESS,
+                    scale: Number(document.getElementById('scale')?.value || SCALE) });
+            } catch (e) { console.warn('[ValRank] Canlı ayarlar saklanamadı:', e); }
+        }
+
+        function onDesignRange(id, value) {
+            DESIGN[id] = Number(value);
+            const labelMap = {
+                rankIconSize: `${value} px`, rankTitleSize: `${value} px`, rrSize: `${value} px`, dailyLabelSize: `${value} px`, dailyCountSize: `${value} px`,
+                textShadowOpacity: `${value}%`, textShadowBlur: `${value} px`, textShadowX: `${value} px`,
+                textShadowY: `${value} px`, textPlateOpacity: `${value}%`, textPlateBlur: `${value} px`,
+                textPlateRadius: `${value} px`, textPlatePadding: `${value} px`, motionDuration: `${value} ms`,
+                strokeWidth: `${value} px`, glowStrength: `${value}%`, rankGap: `${value} px`, iconTextGap: `${value} px`,
+                titleStatsGap: `${value} px`, statsProgressGap: `${value} px`, statsGap: `${value} px`, dailyGap: `${value} px`
+            };
+            const label = document.getElementById(id + "Label");
+            if (label) label.textContent = labelMap[id] || value;
+            applyDesign({ [id]: Number(value) });
+            persistLiveDesign();
+        }
+        function readDesignControls() {
+            const value = id => document.getElementById(id)?.value;
+            return {
+                customRankText: value("customRankText") || "",
+                rankIconSize: Number(value("rankIconSize") ?? 130),
+                customFont: value("customFont") || DESIGN_DEFAULTS.customFont,
+                customTextColor: value("customTextColor") || "#ffffff",
+                rankTitleSize: Number(value("rankTitleSize") ?? 44), rrSize: Number(value("rrSize") ?? 42), rrColor: value("rrColor") || "#ffffff",
+                dailyLabelSize: Number(value("dailyLabelSize") ?? 10), dailyCountSize: Number(value("dailyCountSize") ?? 13),
+                textShadowColor: value("textShadowColor") || "#000000",
+                textShadowOpacity: Number(value("textShadowOpacity") ?? 80),
+                textShadowBlur: Number(value("textShadowBlur") ?? 10),
+                textShadowX: Number(value("textShadowX") ?? 0),
+                textShadowY: Number(value("textShadowY") ?? 4),
+                textPlateColor: value("textPlateColor") || "#000000",
+                textPlateOpacity: Number(value("textPlateOpacity") ?? 42),
+                textPlateBlur: Number(value("textPlateBlur") ?? 0),
+                textPlateRadius: Number(value("textPlateRadius") ?? 8),
+                textPlatePadding: Number(value("textPlatePadding") ?? 0),
+                strokeColor: value("strokeColor") || "#111318", strokeWidth: Number(value("strokeWidth") ?? 1.5),
+                glowColor: value("glowColor") || "#ff4655", glowStrength: Number(value("glowStrength") ?? 35),
+                rankGap: Number(value("rankGap") ?? 10), iconTextGap: Number(value("iconTextGap") ?? 10),
+                titleStatsGap: Number(value("titleStatsGap") ?? 6), statsProgressGap: Number(value("statsProgressGap") ?? 8),
+                statsGap: Number(value("statsGap") ?? 15), dailyGap: Number(value("dailyGap") ?? 12),
+                showDailyRecord: document.getElementById("showDailyRecord")?.checked !== false,
+                motion: value("motion") || "slide",
+                motionDuration: Number(value("motionDuration") ?? 650)
+            };
+        }
+        function populateDesignControls(settings) {
+            const d = { ...DESIGN_DEFAULTS, ...(settings || {}) };
+            Object.entries(d).forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el) { if (el.type === "checkbox") el.checked = val !== false && val !== "false"; else el.value = val; }
+            });
+            Object.entries({
+                rankIconSize: `${d.rankIconSize}px`, rankTitleSize: `${d.rankTitleSize}px`, rrSize: `${d.rrSize}px`, dailyLabelSize: `${d.dailyLabelSize}px`, dailyCountSize: `${d.dailyCountSize}px`,
+                textShadowOpacity: `${d.textShadowOpacity}%`, textShadowBlur: `${d.textShadowBlur} px`,
+                textShadowX: `${d.textShadowX} px`, textShadowY: `${d.textShadowY} px`,
+                textPlateOpacity: `${d.textPlateOpacity}%`, textPlateBlur: `${d.textPlateBlur} px`,
+                textPlateRadius: `${d.textPlateRadius} px`, textPlatePadding: `${d.textPlatePadding} px`,
+                motionDuration: `${d.motionDuration} ms`, strokeWidth: `${d.strokeWidth} px`, glowStrength: `${d.glowStrength}%`,
+                rankGap: `${d.rankGap} px`, iconTextGap: `${d.iconTextGap} px`, titleStatsGap: `${d.titleStatsGap} px`,
+                statsProgressGap: `${d.statsProgressGap} px`, statsGap: `${d.statsGap} px`, dailyGap: `${d.dailyGap} px`
+            }).forEach(([id, val]) => { const el = document.getElementById(id + "Label"); if (el) el.textContent = val; });
+            applyDesign(d);
+        }
+
+        function applySettings(settings) {
+            API_KEY  = settings.apiKey || API_KEY;
+            USERNAME = settings.username || USERNAME;
+            TAG      = settings.tag || TAG;
+            REGION   = settings.region || REGION;
+            PLATFORM = settings.platform || PLATFORM;
+            THEME    = settings.theme || "classic";
+            SHOW_PROGRESS = settings.progress !== false;
+            SCALE = Math.max(20, Math.min(200, parseInt(settings.scale) || 100));
+            applyDesign(settings);
+
+            document.body.dataset.theme = THEME; 
+            updateProgressBar(previousRankRating ?? 0, previousRankTier || '');
+            
+            const frame = document.querySelector('.frame');
+            if (frame) frame.style.transform = 'scale(' + (SCALE / 100) + ')';
+        }
+
+        function onScaleInput(v) {
+            SCALE = Math.max(20, Math.min(200, parseInt(v) || 100));
+            document.getElementById('scale-label').textContent = SCALE + '%';
+            applySettings({ scale: SCALE, theme: THEME, progress: SHOW_PROGRESS });
+        }
+
+        function buildConfiguredURL(s) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("api_key", s.apiKey);
+            url.searchParams.set("username", s.username);
+            url.searchParams.set("tag", s.tag);
+            url.searchParams.set("region", s.region);
+            url.searchParams.set("platform", s.platform);
+            url.searchParams.set("theme", s.theme);
+            if (s.progress) url.searchParams.set("progress", "1"); else url.searchParams.delete("progress");
+            url.searchParams.set("scale", s.scale);
+            const design = { ...DESIGN_DEFAULTS, ...s };
+            Object.entries(design).forEach(([k, v]) => {
+                if (v !== "" && v !== null && v !== undefined) url.searchParams.set(k, String(v));
+                else url.searchParams.delete(k);
+            });
+            return url.toString();
+        }
+
+        function initSettings() {
+            const q = getQueryParams();
+            const ls = loadFromLocalStorage();
+            let chosen = {
+                apiKey: q.api_key || ls?.apiKey || "",
+                username: q.username || ls?.username || "",
+                tag: q.tag || ls?.tag || "",
+                region: normalizeRegion(q.region || ls?.region) || "",
+                platform: normalizePlatform(q.platform || ls?.platform) || "",
+                theme: q.theme || "classic",
+                progress: q.progress === '1' ? true : (q.progress === '0' ? false : (ls?.progress ?? true)),
+                scale: parseInt(q.scale || ls?.scale) || 100,
+                ...Object.fromEntries(Object.keys(DESIGN_DEFAULTS).map(k => {
+                    const queryValue = q[k.toLowerCase()];
+                    return [k, queryValue !== undefined ? (["rankTitleSize","rrSize","dailyLabelSize","dailyCountSize","textShadowOpacity","textShadowBlur","textShadowX","textShadowY","textPlateOpacity","textPlateBlur","textPlateRadius","textPlatePadding","motionDuration","strokeWidth","glowStrength","rankGap","iconTextGap","titleStatsGap","statsProgressGap","statsGap","dailyGap"].includes(k) ? Number(queryValue) : (k === "showDailyRecord" ? queryValue !== "false" : queryValue)) : (ls?.[k] !== undefined ? ls[k] : DESIGN_DEFAULTS[k])];
+                }))
+            };
+            applySettings(chosen);
+            return chosen;
+        }
+
+        function showSetupOverlay(prefill = {}) {
+            const ov = document.getElementById("setup-overlay");
+            document.getElementById("apiKey").value = prefill.apiKey || (API_KEY !== "YOUR_API_KEY" ? API_KEY : "");
+            document.getElementById("username").value = prefill.username || (USERNAME !== "YOUR_USERNAME" ? USERNAME : "");
+            document.getElementById("tag").value = prefill.tag || (TAG !== "YOUR_TAG" ? TAG : "");
+            document.getElementById("region").value = normalizeRegion(prefill.region || REGION);
+            document.getElementById("platform").value = normalizePlatform(prefill.platform || PLATFORM);
+            document.getElementById("theme").value = prefill.theme || THEME;
+            document.getElementById("showProgress").checked = prefill.progress !== undefined ? prefill.progress : SHOW_PROGRESS;
+            document.getElementById("showDailyRecord").checked = prefill.showDailyRecord !== false;
+            document.getElementById("scale").value = prefill.scale !== undefined ? prefill.scale : SCALE;
+            document.getElementById("scale-label").textContent = document.getElementById("scale").value + "%";
+            populateDesignControls({ ...DESIGN, ...(prefill || {}) });
+            
+            ['region', 'platform', 'theme'].forEach(id => {
+                const s = document.getElementById(id);
+                if (s && s._cdd) s._cdd.refresh();
+            });
+
+            document.getElementById("setup-message").textContent = "";
+            ov.style.display = "flex";
+            ov.setAttribute("aria-hidden", "false");
+        }
+
+        function hideSetupOverlay() {
+            document.getElementById("setup-overlay").style.display = "none";
+        }
+
+        function collectForm() {
+            const data = {
+                apiKey: document.getElementById("apiKey").value.trim(),
+                username: document.getElementById("username").value.trim(),
+                tag: document.getElementById("tag").value.trim(),
+                region: normalizeRegion(document.getElementById("region").value),
+                platform: normalizePlatform(document.getElementById("platform").value),
+                theme: document.getElementById("theme").value || "classic",
+                progress: document.getElementById("showProgress").checked,
+                scale: parseInt(document.getElementById("scale").value) || 100,
+                ...readDesignControls()
+            };
+            const errors = [];
+            if (!data.apiKey) errors.push("API Anahtarı zorunlu.");
+            if (!data.username) errors.push("Kullanıcı adı zorunlu.");
+            if (!data.tag) errors.push("Etiket zorunlu.");
+            if (!data.region) errors.push("Bölge zorunlu.");
+            if (!data.platform) errors.push("Platform zorunlu.");
+            return { valid: errors.length === 0, errors, data };
+        }
+
+        function wireSetupUI() {
+            document.getElementById("open-setup").addEventListener("click", () => showSetupOverlay());
+            document.getElementById("close-setup").addEventListener("click", () => hideSetupOverlay());
+            document.getElementById("eo-open-setup").addEventListener("click", () => { hideErrorOverlay(); showSetupOverlay(); });
+            
+            document.getElementById("reset-setup").addEventListener("click", () => {
+                localStorage.removeItem(LS_KEY);
+                populateDesignControls(DESIGN_DEFAULTS);
+                document.getElementById("setup-message").className = "setup-msg success";
+                document.getElementById("setup-message").textContent = "Kayıtlı ayarlar silindi. Varsayılan tasarım önizlendi; tamamen sıfırlamak için sayfayı yenileyin.";
+            });
+
+            const resetDailyBtn = document.getElementById('reset-daily-record');
+            if (resetDailyBtn) resetDailyBtn.addEventListener('click', () => {
+                localStorage.setItem(DAILY_RESET_KEY, String(Date.now()));
+                setDailyRecord(0, 0, 'SIFIRLANDI', '');
+                document.getElementById('setup-message').className = 'setup-msg success';
+                document.getElementById('setup-message').textContent = 'WIN / LOOSE sayacı sıfırlandı. Bundan sonra oynanan maçlar sayılacak.';
+            });
+
+            document.getElementById("copy-url").addEventListener("click", () => {
+                const r = collectForm();
+                if (!r.valid) {
+                    document.getElementById("setup-message").className = "setup-msg error";
+                    document.getElementById("setup-message").textContent = r.errors.join(" ");
+                    return;
+                }
+                navigator.clipboard.writeText(buildConfiguredURL(r.data)).then(() => {
+                    document.getElementById("setup-message").className = "setup-msg success";
+                    document.getElementById("setup-message").textContent = "URL kopyalandı. OBS veya TikTok LIVE Studio'da bağlantı kaynağına yapıştırın.";
+                });
+            });
+
+            document.getElementById("save-setup").addEventListener("click", () => {
+                const r = collectForm();
+                const msg = document.getElementById("setup-message");
+                if (!r.valid) { msg.className = "setup-msg error"; msg.textContent = r.errors.join(" "); return; }
+                saveToLocalStorage(r.data);
+                applySettings(r.data);
+                msg.className = "setup-msg success";
+                msg.textContent = "Kaydedildi. Veriler çekiliyor...";
+                window.history.replaceState({}, "", buildConfiguredURL(r.data));
+                
+                checkRank().then(() => {
+                    checkDailyRecord().catch(() => {});
+                    hideSetupOverlay();
+                }).catch(() => {
+                    msg.className = "setup-msg error";
+                    msg.textContent = "Kaydedildi ama veri çekilemedi. API anahtarını kontrol edin.";
+                });
+            });
+
+            ['region', 'platform', 'theme', 'customFont', 'motion'].forEach(id => enhanceSelect(document.getElementById(id)));
+            
+            ['customRankText','customFont','customTextColor','rrColor','textShadowColor','textPlateColor','motion','strokeColor','glowColor','showDailyRecord'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const liveUpdate = () => { applyDesign(readDesignControls()); persistLiveDesign(); };
+                el.addEventListener('input', liveUpdate);
+                el.addEventListener('change', liveUpdate);
+            });
+            ['theme','showProgress','scale'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const update = () => {
+                    if (id === 'theme') { THEME = el.value || 'classic'; document.body.dataset.theme = THEME; }
+                    if (id === 'showProgress') SHOW_PROGRESS = el.checked;
+                    if (id === 'scale') onScaleInput(el.value);
+                    applySettings({ theme: THEME, progress: SHOW_PROGRESS, scale: SCALE, ...readDesignControls() });
+                    persistLiveDesign();
+                };
+                el.addEventListener('input', update); el.addEventListener('change', update);
+            });
+            const pasteBtn = document.getElementById('apiKey-paste');
+            const revealBtn = document.getElementById('apiKey-reveal');
+            const input = document.getElementById('apiKey');
+            if(pasteBtn) pasteBtn.addEventListener('click', async () => {
+                try { input.value = await navigator.clipboard.readText(); } catch (e) { alert("Panodan okunamadı (CTRL+V kullanın)"); }
+            });
+            if(revealBtn) revealBtn.addEventListener('click', () => {
+                input.type = input.type === 'text' ? 'password' : 'text';
+                revealBtn.textContent = input.type === 'text' ? '👁' : '🙈';
+            });
+        }
+
+        function enhanceSelect(select) {
+            if (!select || select._cdd) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'cdd';
+            select.parentNode.insertBefore(wrap, select);
+            select.classList.add('cdd-native');
+            wrap.appendChild(select);
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'cdd-trigger';
+            trigger.innerHTML = '<span class="cdd-label"></span><svg class="cdd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>';
+            const menu = document.createElement('div');
+            menu.className = 'cdd-menu';
+            wrap.appendChild(trigger);
+            wrap.appendChild(menu);
+
+            const api = {
+                refresh() {
+                    menu.innerHTML = '';
+                    Array.from(select.options).forEach(o => {
+                        if (o.value === '') return;
+                        const row = document.createElement('div');
+                        row.className = 'cdd-option' + (o.value === select.value ? ' selected' : '');
+                        row.dataset.value = o.value;
+                        row.innerHTML = `<span>${o.textContent}</span>`;
+                        row.addEventListener('click', () => {
+                            select.value = o.value;
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                            api.close();
+                        });
+                        menu.appendChild(row);
+                    });
+                    api.updateLabel();
+                },
+                updateLabel() {
+                    const sel = select.options[select.selectedIndex];
+                    wrap.querySelector('.cdd-label').textContent = (sel && sel.value) ? sel.textContent : 'Seçiniz...';
+                },
+                close() { wrap.classList.remove('open'); }
+            };
+            trigger.addEventListener('click', (e) => { e.stopPropagation(); wrap.classList.toggle('open'); });
+            document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) api.close(); });
+            select.addEventListener('change', () => api.updateLabel());
+            select._cdd = api;
+            api.refresh();
+        }
+
+        const tierOrder = [ 'Iron 1', 'Iron 2', 'Iron 3', 'Bronze 1', 'Bronze 2', 'Bronze 3', 'Silver 1', 'Silver 2', 'Silver 3', 'Gold 1', 'Gold 2', 'Gold 3', 'Platinum 1', 'Platinum 2', 'Platinum 3', 'Diamond 1', 'Diamond 2', 'Diamond 3', 'Ascendant 1', 'Ascendant 2', 'Ascendant 3', 'Immortal 1', 'Immortal 2', 'Immortal 3', 'Radiant' ];
+        const shieldImageUrls = [ "https://i.imgur.com/cmzimwM.png", "https://i.imgur.com/MRUZa2i.png", "https://i.imgur.com/39PDFlA.png" ];
+        function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+        function isFirstRankOfTier(rankName) { return rankName !== 'Radiant' && (!rankName.startsWith('Immortal') || rankName.endsWith(' 1')) && rankName.endsWith(' 1'); }
+
+        function updateShieldVisibility(rankTier, shieldCount) {
+            if (suppressShieldUpdates) return;
+            const shieldContainer = document.querySelector('.shield-container');
+            const rightContent = document.querySelector('.right-content');
+            const shieldImg = document.getElementById('shield-image');
+            const rankRatingEl = document.getElementById('rank-rating');
+            const currentTier = rankRatingEl?.dataset?.tierName || rankTier || "";
+            
+            if (isFirstRankOfTier(currentTier)) {
+                shieldContainer.classList.remove('shield-hidden', 'shield-fade-out');
+                shieldContainer.style.opacity = '1';
+                shieldImg.src = shieldImageUrls[shieldCount] || shieldImageUrls[0];
+                shieldImg.style.display = '';
+                shieldImg.style.opacity = '1';
+                document.getElementById('shield-count').textContent = `${shieldCount} KALKAN`;
+            } else {
+                shieldContainer.classList.add('shield-hidden');
+                shieldContainer.style.opacity = '0';
+            }
+        }
+
+        function animateNumber(start, end, duration, onUpdate, onComplete) {
+            const startTime = performance.now();
+            const change = end - start;
+            function step(currentTime) {
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                onUpdate(Math.round(start + easeInOutQuad(progress) * change));
+                if (progress < 1) requestAnimationFrame(step); else if (onComplete) onComplete();
+            }
+            requestAnimationFrame(step);
+        }
+
+        function setRRText(el, value, tierName) {
+            el.textContent = `${value} KP`;
+            updateProgressBar(value, tierName);
+        }
+
+        function changeRankImage(newSrc) {
+            const rankImage = document.getElementById('rank-image');
+            rankImage.classList.add('fade-out');
+            const imgPreload = new Image();
+            imgPreload.src = newSrc;
+            imgPreload.onload = () => {
+                setTimeout(() => {
+                    rankImage.src = newSrc;
+                    rankImage.classList.remove('fade-out');
+                    rankImage.classList.add('fade-in');
+                    setTimeout(() => rankImage.classList.remove('fade-in'), 1000);
+                }, 1000);
+            };
+        }
+
+        async function fetchMMR(url) {
+            const r = await fetch(url);
+            if (!r.ok) throw { widgetCode: mapHttpStatusToError(r.status) };
+            return await r.json();
+        }
+
+        function renderUnratedState() {
+            document.getElementById('rank-rating').textContent = 'DERECESİZ'; 
+            updateRankNameUI('Unrated');
+            document.getElementById('rank-image').src = UNRATED_ICON;
+            setRankAccent('Unrated');
+            hadSuccessfulLoad = true;
+            updateProgressBar(0, 'Unrated');
+            updateShieldVisibility('Unrated', 0);
+            clearWidgetError();
+        }
+
+        function renderPlaceholderState() {
+            document.getElementById('rank-rating').textContent = '– KP';
+            updateRankNameUI('Unrated');
+            document.getElementById('rank-image').src = UNRATED_ICON;
+            setRankAccent('Unrated');
+            updateProgressBar(0, 'Unrated');
+        }
+
+        function setDailyRecord(wins, losses, status = "GÜNCELLENDİ", state = "") {
+            const root = document.getElementById("daily-record");
+            if (!root) return;
+            document.getElementById("daily-wins").textContent = wins;
+            document.getElementById("daily-losses").textContent = losses;
+            document.getElementById("daily-status").textContent = status;
+            root.classList.remove("is-loading", "is-error", "is-empty");
+            if (state) root.classList.add(state);
+        }
+        function matchStartTimestamp(match) {
+            const raw = match?.metadata?.game_start ?? match?.metadata?.started_at ?? match?.meta?.started_at ?? match?.game_start;
+            if (typeof raw === "number") return raw > 1e12 ? raw : raw * 1000;
+            if (typeof raw === "string") { const n = Number(raw); if (Number.isFinite(n) && n > 0) return n > 1e12 ? n : n * 1000; const parsed = Date.parse(raw); return Number.isFinite(parsed) ? parsed : 0; }
+            return 0;
+        }
+        function matchIsCompetitive(match) {
+            const mode = String(match?.metadata?.mode ?? match?.metadata?.queue?.id ?? match?.meta?.mode ?? "").toLowerCase();
+            return !mode || mode.includes("competitive") || mode === "ranked";
+        }
+        function getMatchWinner(match) {
+            const teams = match?.teams || match?.data?.teams;
+            if (!teams) return null;
+            if (typeof teams.red?.has_won === "boolean") return teams.red.has_won ? "red" : "blue";
+            if (typeof teams.blue?.has_won === "boolean") return teams.blue.has_won ? "blue" : "red";
+            const redRounds = Number(teams.red?.rounds_won ?? teams.red?.rounds ?? -1);
+            const blueRounds = Number(teams.blue?.rounds_won ?? teams.blue?.rounds ?? -1);
+            if (redRounds >= 0 && blueRounds >= 0 && redRounds !== blueRounds) return redRounds > blueRounds ? "red" : "blue";
+            return null;
+        }
+        async function checkDailyRecord() {
+            const root = document.getElementById("daily-record");
+            if (!root || DESIGN.showDailyRecord === false || !API_KEY || API_KEY === "YOUR_API_KEY" || !USERNAME || !TAG || !REGION) return;
+            root.classList.add("is-loading");
+            document.getElementById("daily-status").textContent = "MAÇLAR KONTROL EDİLİYOR";
+            try {
+                const url = `https://api.henrikdev.xyz/valorant/v3/matches/${REGION}/${encodeURIComponent(USERNAME)}/${encodeURIComponent(TAG)}?mode=competitive&size=20&api_key=${encodeURIComponent(API_KEY)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const payload = await response.json();
+                const matches = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+                const now = new Date();
+                const resetAt = Number(localStorage.getItem(DAILY_RESET_KEY) || 0);
+                const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+                let wins = 0, losses = 0, counted = 0;
+                for (const match of matches) {
+                    if (!matchIsCompetitive(match)) continue;
+                    const ts = matchStartTimestamp(match);
+                    if (!ts) continue;
+                    const date = new Date(ts);
+                    const matchKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                    if (matchKey !== todayKey || (resetAt && ts < resetAt)) continue;
+                    const allPlayers = match?.players?.all_players || match?.players || [];
+                    const player = Array.isArray(allPlayers) ? allPlayers.find(p => String(p?.name || "").toLowerCase() === USERNAME.toLowerCase() && String(p?.tag || "").toLowerCase() === TAG.toLowerCase()) : null;
+                    const team = String(player?.team || "").toLowerCase();
+                    const winner = getMatchWinner(match);
+                    if (!winner || !team) continue;
+                    if (team === winner) wins++; else losses++;
+                    counted++;
+                }
+                setDailyRecord(wins, losses, counted ? "GÜNCELLENDİ" : "SIFIR", counted ? "" : "is-empty");
+            } catch (e) {
+                console.warn("[ValRank] Günlük maç verisi alınamadı:", e);
+                setDailyRecord("–", "–", "MAÇ VERİSİ ALINAMADI", "is-error");
+            }
+        }
+
+        async function checkRank() {
+            try {
+                if (!API_KEY || API_KEY === "YOUR_API_KEY" || !USERNAME) {
+                    throw { widgetCode: 'E-CONFIG' };
+                }
+                const url = `https://api.henrikdev.xyz/valorant/v3/mmr/${REGION}/${PLATFORM}/${encodeURIComponent(USERNAME)}/${encodeURIComponent(TAG)}?api_key=${encodeURIComponent(API_KEY)}`;
+                const data = await fetchMMR(url);
+                
+                const currentData = data?.data?.current || data?.current || {};
+                if (!currentData.tier || currentData.tier.name === undefined) throw { widgetCode: 'E-NODATA' };
+
+                if (currentData.tier.id === 0 || currentData.tier.name === 'Unrated') {
+                    renderUnratedState();
+                    return;
+                }
+
+                const newRankTier = currentData.tier.name;
+                const newRankRating = Math.max(0, currentData.rr || 0);
+                const shieldCount = currentData.rank_protection_shields || 0;
+                const newImageSrc = `https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/${currentData.tier.id}/largeicon.png`;
+
+                const rankRatingEl = document.getElementById('rank-rating');
+                rankRatingEl.dataset.tierName = newRankTier;
+                updateRankNameUI(newRankTier);
+                setRankAccent(newRankTier);
+                hadSuccessfulLoad = true;
+                clearWidgetError();
+
+                if (previousRankTier === null) {
+                    setRRText(rankRatingEl, newRankRating, newRankTier);
+                    document.getElementById('rank-image').src = newImageSrc;
+                    updateShieldVisibility(newRankTier, shieldCount);
+                } else if (newRankTier !== previousRankTier) {
+                    changeRankImage(newImageSrc);
+                    rankRatingEl.style.color = (tierOrder.indexOf(newRankTier) > tierOrder.indexOf(previousRankTier)) ? 'green' : 'red';
+                    animateNumber(previousRankRating, newRankRating, 1000, v => setRRText(rankRatingEl, v, newRankTier), () => rankRatingEl.style.color = 'var(--text-color)');
+                    updateShieldVisibility(newRankTier, shieldCount);
+                } else {
+                    if (newRankRating > previousRankRating) rankRatingEl.style.color = 'green';
+                    else if (newRankRating < previousRankRating) rankRatingEl.style.color = 'red';
+                    animateNumber(previousRankRating, newRankRating, 1000, v => setRRText(rankRatingEl, v, newRankTier), () => rankRatingEl.style.color = 'var(--text-color)');
+                }
+
+                previousRankRating = newRankRating;
+                previousRankTier = newRankTier;
+
+            } catch (error) {
+                showWidgetError(error.widgetCode || 'E-NET');
+            }
+        }
+
+        (function bootstrap() {
+            const chosen = initSettings();
+            wireSetupUI();
+            populateDesignControls(chosen);
+            
+            const needSetup = !USERNAME || USERNAME === "YOUR_USERNAME";
+            if (needSetup) showSetupOverlay(chosen);
+
+            setInterval(() => {
+                checkRank().catch(() => {});
+            }, 60000);
+            setInterval(() => {
+                checkDailyRecord().catch(() => {});
+            }, 300000);
+            checkDailyRecord().catch(() => {});
+            checkRank().catch(() => {});
+        })();
+    </script>
+</body>
+</html>
