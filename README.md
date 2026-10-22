@@ -21,3 +21,7 @@ OBS / TikTok URL'sini Kopyala seçeneğine bas.
 Kopyalanan bağlantıyı OBS veya TikTok LIVE Studio'daki URL kaynağına yapıştır.
 
 Not: Kişisel HUD bağlantın API anahtarını içerebilir. Bu bağlantıyı başkalarıyla paylaşma.
+
+
+
+<img width="615" height="905" alt="Ekran görüntüsü 2026-10-22 080900" src="https://github.com/user-attachments/assets/c004fdf1-8804-4cf7-8ec4-c54b8269754d" />
