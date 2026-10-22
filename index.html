@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valorant Pro Rank HUD v6</title>
+    <title>BERKBASE | Valorant Rank HUD</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&family=Luckiest+Guy&display=swap');
 
@@ -395,6 +395,7 @@
         .setup-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .setup-body .full { grid-column: 1 / -1; }
         .setup-field { display: flex; flex-direction: column; gap: 7px; }
+        .api-note { margin: 2px 0 0; color: #9da7b8; font-size: 11px; line-height: 1.5; }
         .setup-field label.field-label { font-size: 12.5px; font-weight: 600; color: #aab2c0; }
         .setup-field input[type="text"], .setup-field input[type="password"], .setup-field select { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 11px 13px; color: #fff; font-size: 14px; font-family: inherit; outline: none; }
         .setup-field input:focus, .setup-field select:focus { border-color: #ff4655; box-shadow: 0 0 0 3px rgba(255, 70, 85, 0.25); background: rgba(255, 70, 85, 0.06); }
@@ -566,7 +567,7 @@
     <div class="setup-overlay" id="setup-overlay" aria-hidden="true">
         <div class="setup-card">
             <div class="setup-header">
-                <div class="setup-title">Widget Ayarları <span>· Pro Sürüm</span></div>
+                <div class="setup-title">BERKBASE <span>· VALORANT HUD</span></div>
                 <div class="setup-close" id="close-setup" title="Kapat">✕</div>
             </div>
             <div class="setup-body">
@@ -577,6 +578,7 @@
                         <button type="button" class="secret-btn" id="apiKey-paste" title="Panodan yapıştır">📋</button>
                         <button type="button" class="secret-btn" id="apiKey-reveal" title="Göster / Gizle">👁</button>
                     </div>
+                    <p class="api-note">API anahtarı bu sitede kaydedilmez. OBS için oluşturulan bağlantının içinde bulunur; bağlantıyı herkese açık paylaşmayın.</p>
                 </div>
                 <div class="setup-field">
                     <label class="field-label" for="username">Riot Adı (Kare'den önce)</label>
@@ -944,9 +946,30 @@
         }
 
         function getQueryParams() {
-            const sp = new URLSearchParams(window.location.search);
             const obj = {};
+            // Backward compatibility for older query-string links.
+            const sp = new URLSearchParams(window.location.search);
             for (const [k, v] of sp.entries()) obj[k.toLowerCase()] = v;
+
+            // Config lives in the URL fragment. Browsers do not send the fragment to GitHub Pages.
+            try {
+                const hash = window.location.hash;
+                if (hash.startsWith("#cfg=")) {
+                    const encoded = hash.slice(5).replace(/-/g, "+").replace(/_/g, "/");
+                    const padded = encoded + "=".repeat((4 - encoded.length % 4) % 4);
+                    const binary = atob(padded);
+                    const bytes = Uint8Array.from(binary, ch => ch.charCodeAt(0));
+                    const config = JSON.parse(new TextDecoder().decode(bytes));
+                    for (const [key, value] of Object.entries(config || {})) {
+                        const normalizedKey = key === "apiKey" ? "api_key" : key.toLowerCase();
+                        if (value !== undefined && value !== null) {
+                            obj[normalizedKey] = key === "progress" ? (value ? "1" : "0") : String(value);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("[BERKBASE HUD] Yapılandırma bağlantısı okunamadı.");
+            }
             return obj;
         }
 
@@ -961,9 +984,22 @@
         }
 
         function loadFromLocalStorage() {
-            try { return JSON.parse(localStorage.getItem(LS_KEY)) || null; } catch { return null; }
+            try {
+                const saved = JSON.parse(localStorage.getItem(LS_KEY));
+                if (!saved || typeof saved !== "object") return null;
+                // Remove API keys stored by older versions. Only non-secret preferences may persist.
+                if (Object.prototype.hasOwnProperty.call(saved, "apiKey")) {
+                    delete saved.apiKey;
+                    localStorage.setItem(LS_KEY, JSON.stringify(saved));
+                }
+                return saved;
+            } catch { return null; }
         }
-        function saveToLocalStorage(settings) { localStorage.setItem(LS_KEY, JSON.stringify(settings)); }
+        function saveToLocalStorage(settings) {
+            const safeSettings = { ...settings };
+            delete safeSettings.apiKey;
+            localStorage.setItem(LS_KEY, JSON.stringify(safeSettings));
+        }
 
         function hexToRgb(hex) {
             const h = String(hex || "#000000").replace("#", "");
@@ -1120,19 +1156,15 @@
 
         function buildConfiguredURL(s) {
             const url = new URL(window.location.href);
-            url.searchParams.set("api_key", s.apiKey);
-            url.searchParams.set("username", s.username);
-            url.searchParams.set("tag", s.tag);
-            url.searchParams.set("region", s.region);
-            url.searchParams.set("platform", s.platform);
-            url.searchParams.set("theme", s.theme);
-            if (s.progress) url.searchParams.set("progress", "1"); else url.searchParams.delete("progress");
-            url.searchParams.set("scale", s.scale);
-            const design = { ...DESIGN_DEFAULTS, ...s };
-            Object.entries(design).forEach(([k, v]) => {
-                if (v !== "" && v !== null && v !== undefined) url.searchParams.set(k, String(v));
-                else url.searchParams.delete(k);
-            });
+            url.search = "";
+            url.hash = "";
+            const config = { ...DESIGN_DEFAULTS, ...s };
+            // Base64URL UTF-8 JSON in the fragment; it is not sent to the hosting server.
+            const bytes = new TextEncoder().encode(JSON.stringify(config));
+            let binary = "";
+            bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+            const encoded = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+            url.hash = "cfg=" + encoded;
             return url.toString();
         }
 
@@ -1235,7 +1267,7 @@
                 }
                 navigator.clipboard.writeText(buildConfiguredURL(r.data)).then(() => {
                     document.getElementById("setup-message").className = "setup-msg success";
-                    document.getElementById("setup-message").textContent = "URL kopyalandı. OBS veya TikTok LIVE Studio'da bağlantı kaynağına yapıştırın.";
+                    document.getElementById("setup-message").textContent = "URL kopyalandı. OBS veya TikTok LIVE Studio'ya yapıştırın. API anahtarı bağlantının içinde bulunur; bağlantıyı herkese açık paylaşmayın.";
                 });
             });
 
@@ -1247,7 +1279,8 @@
                 applySettings(r.data);
                 msg.className = "setup-msg success";
                 msg.textContent = "Kaydedildi. Veriler çekiliyor...";
-                window.history.replaceState({}, "", buildConfiguredURL(r.data));
+                // Keep the API key out of the address bar after applying settings. Copy URL generates the overlay link.
+                window.history.replaceState({}, "", window.location.pathname);
                 
                 checkRank().then(() => {
                     checkDailyRecord().catch(() => {});
